@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BFHL Data Processor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            width: 400px;
+            padding: 20px;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e); /* Gradient effect */
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.3); /* Glowing shadow */
+        }
+        h1 {
+            color: #00d4ff; /* Shiny cyan */
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); /* Glowing text effect */
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-top: 10px;
+            background-color: #333;
+            color: #e0e0e0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); /* Glowing effect */
+        }
+        textarea:focus {
+            border-color: #00d4ff;
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8); /* Glowing effect on focus */
+        }
+        button {
+            background: linear-gradient(145deg, #00d4ff, #00aaff); /* Shiny gradient button */
+            color: #121212; /* Dark text color */
+            border: none;
+            padding: 12px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.4); /* Glowing effect */
+        }
+        button:hover {
+            background: linear-gradient(145deg, #00aaff, #0088cc); /* Darker shiny gradient */
+        }
+        button:active {
+            background: linear-gradient(145deg, #0088cc, #006699); /* Even darker shiny gradient */
+            transform: scale(0.98);
+        }
+        .checkbox-group {
+            margin-top: 10px;
+        }
+        .checkbox-group label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #1e1e1e, #333); /* Gradient effect */
+            color: #e0e0e0;
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.3); /* Glowing shadow */
+            font-size: 16px;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BFHL Data Processor</h1>
+        <form id="data-form">
+            <textarea id="data-input" placeholder='Enter JSON array, e.g., ["M", "1", "334", "4", "B"]'></textarea>
+            <button type="submit">Submit</button>
+        </form>
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="show-numbers"> Numbers</label>
+            <label><input type="checkbox" id="show-alphabets"> Alphabets</label>
+            <label><input type="checkbox" id="show-highest"> Highest alphabet</label>
+        </div>
+        <div class="response" id="response"></div>
+    </div>
+
+    <script>
+        document.getElementById('data-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const dataInput = document.getElementById('data-input').value;
+            const showNumbers = document.getElementById('show-numbers').checked;
+            const showAlphabets = document.getElementById('show-alphabets').checked;
+            const showHighest = document.getElementById('show-highest').checked;
+            const responseDiv = document.getElementById('response');
+
+            // Validate input format
+            let parsedData;
+            try {
+                parsedData = JSON.parse(dataInput);
+                if (!Array.isArray(parsedData)) {
+                    throw new Error('Invalid JSON array format');
+                }
+                if (parsedData.some(item => typeof item !== 'string')) {
+                    throw new Error('All elements in the array must be strings');
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p>Error: Kindly enter proper input in the format like JSON array, e.g., ["1", "M", "124"]. ${error.message}</p>`;
+                return;
+            }
+
+            // Check for special characters
+            const specialCharacters = parsedData.filter(item => /[^a-zA-Z0-9]/.test(item));
+            if (specialCharacters.length > 0) {
+                responseDiv.innerHTML += `<p>Special characters detected: ${specialCharacters.join(', ')}</p>`;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: parsedData })
+                });
+
+                const result = await response.json();
+                
+                responseDiv.innerHTML = ''; // Clear previous response
+                
+                if (result.is_success) {
+                    let content = '';
+                    if (showNumbers) {
+                        content += result.numbers.length > 0 
+                            ? `<p><strong>Numbers:</strong> ${result.numbers.join(', ')}</p>` 
+                            : '<p>No numbers found.</p>';
+                    }
+                    if (showAlphabets) {
+                        content += result.alphabets.length > 0 
+                            ? `<p><strong>Alphabets:</strong> ${result.alphabets.join(', ')}</p>` 
+                            : '<p>No alphabets found.</p>';
+                    }
+                    if (showHighest) {
+                        content += result.highest_alphabet.length > 0 
+                            ? `<p><strong>Highest Alphabet:</strong> ${result.highest_alphabet.join(', ')}</p>` 
+                            : '<p>No highest alphabet found.</p>';
+                    }
+                    if (!content) {
+                        content = '<p>No options selected or no data to display.</p>';
+                    }
+                    responseDiv.innerHTML = content;
+                } else {
+                    responseDiv.innerHTML = `<p>Error: ${result.message}</p>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
