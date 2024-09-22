@@ -8,7 +8,13 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/bfhl",
+      "methods": ["POST"],
+      "dest": "app.py"
+    },
+    {
+      "src": "/bfhl",
+      "methods": ["GET"],
       "dest": "app.py"
     }
   ]
