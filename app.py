@@ -1,8 +1,16 @@
-
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-app = Flask(__name__)
+import os
+
+app = Flask(__name__, static_folder='frontend')
 CORS(app)
+
+# Route to serve the frontend
+@app.route('/')
+def serve_frontend():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# API route for data processing
 @app.route('/bfhl', methods=['POST'])
 def process_data():
     try:
@@ -10,8 +18,8 @@ def process_data():
         if not data:
             return jsonify({"is_success": False, "message": "No data provided"}), 400
 
-        user_id = "ganeshk_02042004"  
-        email = "ganeshrajan2.00@gmail.com"  
+        user_id = "ganeshk_02042004"
+        email = "ganeshrajan2.00@gmail.com"
         roll_number = "RA2111003010298"
 
         numbers = [item for item in data if item.isdigit()]
@@ -31,9 +39,5 @@ def process_data():
     except Exception as e:
         return jsonify({"is_success": False, "message": str(e)}), 500
 
-@app.route('/bfhl', methods=['GET'])
-def get_operation_code():
-    return jsonify({"operation_code": 1})
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
