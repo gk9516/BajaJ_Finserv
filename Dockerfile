@@ -8,9 +8,9 @@ WORKDIR /BajaJ_Finserv
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copy the backend code and frontend files
+# Copy the backend code and the frontend files (correct casing)
 COPY app.py .
-COPY frontend/ frontend/
+COPY Frontend/ Frontend/
 
 # Expose the Flask port
 EXPOSE 5000
