@@ -1,8 +1,8 @@
 # Use the official Python image
 FROM python:3.9
 
-# Set the working directory
-WORKDIR /app
+# Set the working directory inside the container
+WORKDIR /BajaJ_Finserv
 
 # Copy the requirements and install them
 COPY requirements.txt .
