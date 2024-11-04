@@ -1,26 +1,19 @@
-# Step 1: Set up the Backend with Python
-FROM python:3.9 AS backend
+# Use the official Python image
+FROM python:3.9
 
+# Set the working directory
 WORKDIR /app
-COPY requirements.txt .  # Copy requirements file for backend
-RUN pip install -r requirements.txt  # Install Python dependencies
 
-COPY app.py .  # Copy the backend code
+# Copy the requirements and install them
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Step 2: Production Setup - Combine Frontend and Backend
-FROM nginx:alpine AS production
+# Copy the backend code and frontend files
+COPY app.py .
+COPY frontend/ frontend/
 
-# Copy frontend files directly to Nginx's web root
-COPY frontend/index.html /usr/share/nginx/html/
+# Expose the Flask port
+EXPOSE 5000
 
-# Copy backend code
-COPY --from=backend /app /app/
-
-# Copy Nginx configuration for frontend and backend routing
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose ports for Nginx (80) and Flask backend (5000)
-EXPOSE 80 5000
-
-# Start Flask backend and Nginx server
-CMD ["sh", "-c", "python3 /app/app.py & nginx -g 'daemon off;'"]
+# Run the Flask server
+CMD ["python3", "app.py"]
