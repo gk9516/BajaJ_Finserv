@@ -11,10 +11,10 @@ COPY app.py .  # Copy the backend code
 FROM nginx:alpine AS production
 
 # Copy frontend files directly to Nginx's web root
-COPY frontend/index.html /usr/share/nginx/html
+COPY frontend/index.html /usr/share/nginx/html/
 
 # Copy backend code
-COPY --from=backend /app /app
+COPY --from=backend /app /app/
 
 # Copy Nginx configuration for frontend and backend routing
 COPY nginx.conf /etc/nginx/nginx.conf
